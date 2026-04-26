@@ -1,0 +1,100 @@
+{
+  "app": {
+    "name": "TradeQuest",
+    "tagline": "주식 세계의 듀오링고 + 포켓몬"
+  },
+  "nav": {
+    "home": "홈",
+    "skills": "스킬",
+    "trade": "매매",
+    "portfolio": "포트",
+    "profile": "프로필"
+  },
+  "onboarding": {
+    "welcome_title": "어서 와, 트레이더!",
+    "welcome_body": "TradeQuest 는 진짜 돈 없이도 주식을 배우는 곳이야.\n캐릭터를 만들고, 매일 5분만 투자해 보자.",
+    "start_cta": "시작하기",
+    "pick_class_title": "어떤 트레이더가 되고 싶어?",
+    "class_chartist": "차트 분석가",
+    "class_value": "가치투자자",
+    "class_momentum": "모멘텀 트레이더",
+    "name_placeholder": "캐릭터 이름 (한글/영문)",
+    "create_cta": "캐릭터 생성"
+  },
+  "home": {
+    "today_quests": "오늘의 퀘스트",
+    "trophy": "트로피",
+    "trophy_view_all": "전체 보기",
+    "today_market": "오늘의 시장",
+    "ai_briefing": "AI 브리핑",
+    "exp": "EXP"
+  },
+  "quests": {
+    "read_briefing": "오늘의 시장 브리핑 읽기",
+    "trade_with_reason": "매매 1회 + 진입 근거 작성",
+    "study_5min": "스킬 학습 5분",
+    "review_trade": "어제 매매 회고하기",
+    "weekly_quiz": "주간 퀴즈 풀기"
+  },
+  "skills": {
+    "title": "스킬 트리",
+    "branch_chart": "차트",
+    "branch_fundamental": "재무",
+    "branch_psychology": "심리",
+    "branch_capstone": "캡스톤",
+    "branch_boss": "보스",
+    "locked": "잠김",
+    "unlocked": "해금됨",
+    "completed": "완료",
+    "section_intro": "도입",
+    "section_concept": "개념",
+    "section_exercise": "연습",
+    "section_quiz": "퀴즈",
+    "start_lesson": "학습 시작",
+    "continue_lesson": "이어서"
+  },
+  "trade": {
+    "title": "매매",
+    "buy": "매수",
+    "sell": "매도",
+    "qty": "수량",
+    "price": "가격",
+    "reason_label": "진입 근거 (필수)",
+    "reason_placeholder": "왜 지금 사려는지 1~2줄로 적어 봐. 차트, 뉴스, 본인의 감정도 좋아.",
+    "ai_advice_cta": "AI 코치한테 한번 물어볼게 (+에너지 5)",
+    "submit_buy": "매수 주문",
+    "submit_sell": "매도 주문",
+    "ai_loading": "코치가 차트를 보고 있어…",
+    "limit_reached": "오늘 AI 코치 사용량을 다 썼어. 내일 다시 만나자."
+  },
+  "portfolio": {
+    "title": "포트폴리오",
+    "total_assets": "총 자산",
+    "cash": "예수금",
+    "positions": "보유 종목",
+    "no_positions": "아직 보유한 종목이 없어.",
+    "history": "매매 기록",
+    "no_history": "첫 매매가 너의 첫 트로피야."
+  },
+  "profile": {
+    "title": "프로필",
+    "stats": "스탯",
+    "trophies": "트로피",
+    "weekly_review": "주간 회고",
+    "weekly_review_cta": "이번 주 회고 받기 (Sonnet)",
+    "settings": "설정",
+    "logout": "로그아웃"
+  },
+  "feedback": {
+    "trade_no_reason": "진입 근거를 한 줄이라도 적어 줘. 너의 미래 너에게 쓰는 메모야.",
+    "out_of_energy": "오늘은 에너지가 부족해. 내일 다시 와!",
+    "loss_comfort_default": "잘 끊었어. 손절은 패배가 아니라 데이터야.",
+    "first_trade": "첫 매매 완료! 트로피를 받았어 🏆",
+    "level_up": "레벨업! 새로운 스킬이 잠금 해제됐어."
+  },
+  "errors": {
+    "generic": "잠깐 문제가 생겼어. 다시 시도해 줘.",
+    "auth_required": "먼저 로그인 해줘.",
+    "kis_unavailable": "지금 시세를 가져올 수 없어. 잠시 뒤 다시 시도해."
+  }
+}

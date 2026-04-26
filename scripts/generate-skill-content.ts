@@ -7,11 +7,25 @@
  *   pnpm tsx scripts/generate-skill-content.ts
  */
 
-import "dotenv/config";
+import { config } from "dotenv";
 import fs from "node:fs/promises";
 import path from "node:path";
 import Anthropic from "@anthropic-ai/sdk";
 import { createClient } from "@supabase/supabase-js";
+
+config({ path: ".env.local" });
+config({ path: ".env" });
+
+if (
+  !process.env.NEXT_PUBLIC_SUPABASE_URL ||
+  !process.env.SUPABASE_SERVICE_ROLE_KEY ||
+  !process.env.ANTHROPIC_API_KEY
+) {
+  console.error(
+    "❌ .env.local 에 NEXT_PUBLIC_SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY / ANTHROPIC_API_KEY 가 모두 설정되어 있어야 해요."
+  );
+  process.exit(1);
+}
 
 type SkillSeed = {
   id: string;

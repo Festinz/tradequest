@@ -1,14 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { Sparkles, Search, ExternalLink } from "lucide-react";
 import t from "@/locales/ko.json";
 import { formatKRW } from "@/lib/utils";
 
-const TradingViewChart = dynamic(
-  () => import("@/components/chart/TradingViewChart"),
+const KoreanCandleChart = dynamic(
+  () => import("@/components/chart/KoreanCandleChart"),
   { ssr: false, loading: () => <ChartSkeleton /> }
 );
 
@@ -26,7 +26,11 @@ export default function TradeClient({
   stocks: Stock[];
   positions: Position[];
 }) {
-  const [symbol, setSymbol] = useState(initialSymbol);
+  // initialSymbol 은 "KRX:005930" 형태일 수도, 그냥 "005930" 일 수도
+  const initialTicker = initialSymbol.includes(":")
+    ? initialSymbol.split(":")[1]
+    : initialSymbol;
+  const [ticker, setTicker] = useState(initialTicker);
   const [showPicker, setShowPicker] = useState(false);
   const [search, setSearch] = useState("");
   const [tab, setTab] = useState<"buy" | "sell">("buy");
@@ -38,15 +42,25 @@ export default function TradeClient({
   const [submitting, setSubmitting] = useState(false);
   const [result, setResult] = useState<{ ok: boolean; msg: string } | null>(null);
 
-  const ticker = symbol.includes(":") ? symbol.split(":")[1] : symbol;
   const currentStock = stocks.find((s) => s.ticker === ticker);
   const currentPosition = positions.find((p) => p.ticker === ticker);
+  const market = (currentStock?.market ?? "KOSPI") as "KOSPI" | "KOSDAQ";
 
   const filtered = stocks.filter(
     (s) =>
       s.ticker.includes(search) ||
       s.name.toLowerCase().includes(search.toLowerCase())
   );
+
+  // 종목 변경 시 마지막 종가를 자동 입력
+  useEffect(() => {
+    fetch(`/api/market/candles?ticker=${ticker}&market=${market}&days=10`)
+      .then((r) => r.ok && r.json())
+      .then((j) => {
+        if (j?.last?.close) setPrice(String(Math.round(j.last.close)));
+      })
+      .catch(() => {});
+  }, [ticker, market]);
 
   async function askCoach() {
     if (!reason.trim()) return alert(t.feedback.trade_no_reason);
@@ -116,7 +130,7 @@ export default function TradeClient({
           <div className="min-w-0">
             <h1 className="truncate text-h1">{currentStock?.name ?? ticker}</h1>
             <p className="text-caption text-text-2">
-              {ticker} · {currentStock?.market ?? "KRX"}
+              {ticker} · {market}
               {currentPosition && (
                 <span className="ml-2 inline-flex items-center gap-1 rounded-chip bg-brand/10 px-2 py-0.5 text-caption text-brand">
                   보유 {currentPosition.qty}주 · 평단 {formatKRW(currentPosition.avg_price)}
@@ -126,7 +140,7 @@ export default function TradeClient({
           </div>
           <div className="flex items-center gap-2">
             <a
-              href={`https://finance.naver.com/item/main.nhn?code=${ticker}`}
+              href={`https://m.stock.naver.com/domestic/stock/${ticker}/total`}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-1 rounded-card border border-border bg-surface-0 px-3 py-2 text-caption text-text-2 hover:border-brand"
@@ -144,12 +158,12 @@ export default function TradeClient({
           </div>
         </header>
 
-        <TradingViewChart symbol={symbol} interval="D" height={520} />
-
-        <p className="mt-2 text-caption text-text-3">
-          ⓘ 차트가 안 뜨면 TradingView 가 해당 종목을 지원하지 않거나 일시적 오류일 수 있어.
-          위의 "네이버 증권" 링크로 우회해서 확인해 봐.
-        </p>
+        <KoreanCandleChart
+          ticker={ticker}
+          market={market}
+          name={currentStock?.name}
+          height={500}
+        />
       </section>
 
       {/* 우측: 주문 폼 */}
@@ -195,7 +209,7 @@ export default function TradeClient({
                 value={price}
                 onChange={(e) => setPrice(e.target.value)}
                 inputMode="numeric"
-                placeholder="75400"
+                placeholder="자동 입력"
                 className="mt-1 w-full rounded-card border border-border bg-surface-1 px-3 py-2 text-body font-mono"
               />
             </label>
@@ -261,19 +275,14 @@ export default function TradeClient({
               {positions.map((p) => (
                 <li key={p.ticker}>
                   <button
-                    onClick={() => setSymbol(`KRX:${p.ticker}`)}
+                    onClick={() => setTicker(p.ticker)}
                     className="flex w-full items-center justify-between rounded-card border border-border bg-surface-1 px-3 py-2 text-left hover:border-brand"
                   >
                     <div>
                       <p className="text-caption">{p.name}</p>
                       <p className="text-caption text-text-3">{p.qty}주</p>
                     </div>
-                    <Link
-                      href={`/trade?symbol=KRX:${p.ticker}`}
-                      className="text-caption text-brand"
-                    >
-                      열기
-                    </Link>
+                    <span className="text-caption text-brand">선택</span>
                   </button>
                 </li>
               ))}
@@ -282,7 +291,6 @@ export default function TradeClient({
         )}
       </aside>
 
-      {/* 종목 변경 모달 */}
       {showPicker && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
@@ -310,7 +318,7 @@ export default function TradeClient({
                 <li key={s.ticker}>
                   <button
                     onClick={() => {
-                      setSymbol(`KRX:${s.ticker}`);
+                      setTicker(s.ticker);
                       setShowPicker(false);
                       setSearch("");
                     }}

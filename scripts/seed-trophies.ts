@@ -3,8 +3,17 @@
  *   pnpm tsx scripts/seed-trophies.ts
  */
 
-import "dotenv/config";
+import { config } from "dotenv";
 import { createClient } from "@supabase/supabase-js";
+
+// .env.local → .env 순으로 우선 로드 (Next.js 와 동일 동작)
+config({ path: ".env.local" });
+config({ path: ".env" });
+
+if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
+  console.error("❌ .env.local 에 NEXT_PUBLIC_SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY 가 설정되어 있지 않아요.");
+  process.exit(1);
+}
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,

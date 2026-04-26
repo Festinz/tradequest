@@ -19,7 +19,8 @@
 - **AI 코치** — 매매 직전 진입 근거 코칭, 일일 30회 한도, 사용 시 EXP +40 (미사용 +20)
 - **모의 매매** — 가중평균 평단, 매도 시 손익률 자동 계산, 보유 종목 즉시 차트 점프
 - **트로피** — 15종 (일반/레어/에픽/레전더리), 일부 숨김 트로피
-- **TradingView 임베드 차트** — 실시간 한국주식, 인디케이터 내장, 종목 검색
+- **자체 캔들 차트** — `lightweight-charts` + Yahoo Finance 데이터, 한국 시장 빨강↑/파랑↓ 컨벤션, 거래량 동시 표시
+- **현재가 자동 입력** — 종목 변경 시 마지막 종가가 주문 폼에 자동 채워짐
 - **KIS 개인 모드 토글** — 본인 한국투자증권 계좌만 KIS API 사용 (약관 준수)
 
 ---
@@ -32,8 +33,9 @@
 | Styling | Tailwind CSS 3.4, Pretendard Variable 폰트 |
 | Auth + DB | Supabase (Postgres 15 + Auth + Row Level Security) |
 | AI | Anthropic Claude Haiku 4.5 (코칭/퀴즈) + Sonnet 4.6 (주간 회고) |
-| Chart | TradingView Embedded Widget — 실시간/지연 한국 주식, 자체 라이선스 |
-| Stock Data (옵션) | 한국투자증권 KIS Developers API (개인 모드 한정) |
+| Chart | TradingView Lightweight Charts (렌더링) |
+| Stock Data | Yahoo Finance (`yahoo-finance2`) — 한국주식 무료, 약 15분 지연 |
+| Stock Data (옵션) | 한국투자증권 KIS Developers API (개인 모드 한정) — 본인 계좌 시세용 |
 | Icons | Lucide React |
 | Deploy | Vercel Hobby (무료) |
 
@@ -147,7 +149,8 @@ tradequest/
 │   │   ├── quests/{today,complete}
 │   │   ├── skills/complete
 │   │   ├── settings              # user_settings GET/PATCH
-│   │   └── market/{price,daily}  # KIS (개인 모드만)
+│   │   ├── market/candles        # Yahoo Finance 일봉 (모두 가능)
+│   │   └── market/{price,daily}  # KIS 실시간 (개인 모드만)
 │   ├── skills/{page,[id]}        # 트리 + 학습
 │   ├── trade/                    # TradingView + 주문 폼
 │   ├── portfolio/                # 보유종목 + 매매기록 테이블
@@ -158,9 +161,8 @@ tradequest/
 ├── components/
 │   ├── AppShell.tsx              # 사이드바 + 톱바 + 모바일 탭바
 │   ├── chart/
-│   │   ├── TradingViewChart.tsx  # Advanced Chart 위젯
-│   │   ├── SymbolMini.tsx        # Mini Symbol Overview
-│   │   └── SymbolSearch.tsx
+│   │   ├── KoreanCandleChart.tsx # 자체 캔들 + 거래량 (lightweight-charts)
+│   │   └── TradingViewChart.tsx  # 해외 종목용 백업
 │   └── BottomNav.tsx
 ├── lib/
 │   ├── supabase/{client,server,middleware}.ts
@@ -192,15 +194,20 @@ KIS Developers API 는 본인 계좌에서만 사용 가능 (재배포 금지).
 기본값은 false → 공개 배포해도 안전.
 설정 페이지에서 본인이 ON 하면 본인 세션만 KIS 사용.
 
-### 2. 차트 = TradingView 위젯
+### 2. 차트 = 자체 렌더링 + Yahoo Finance
 
-자체 차트 라이브러리 + 데이터 소스 직접 가져오는 대신, TradingView 가 라이선스를 보유한 임베드 위젯 사용.
+**왜 TradingView 임베드를 안 쓰나?**
+TradingView 무료 임베드 위젯은 KRX 시세를 "프리미엄 데이터" 로 분류해서 한국 주식 차트가 막힘.
+다른 사이트에 임베드해서 보려면 유료 플랜 필요.
 
-장점:
-- 한국 주식 실시간(또는 지연) 시세 무료
-- 인디케이터 (RSI, MACD, MA) 다 내장
-- 종목 검색, 인터벌 변경, 풀스크린 모두 위젯 자체 처리
-- 재배포 정책 깨끗 (TradingView 가 라이선스 책임)
+**대신 사용한 조합:**
+- **렌더링**: `lightweight-charts` (TradingView 가 만든 OSS 차트 라이브러리, MIT)
+- **데이터**: `yahoo-finance2` (npm) — 한국주식 무료, `005930.KS` (KOSPI) / `005930.KQ` (KOSDAQ) 형식
+- **백엔드**: `/api/market/candles` server route 가 Yahoo 호출 + 캐시 (60s SWR)
+- **프론트엔드**: `KoreanCandleChart` 컴포넌트, 한국 시장 컨벤션 (빨강↑/파랑↓), 거래량 히스토그램 동시 표시
+- **현재가 자동 입력**: 차트 fetch 시 마지막 종가를 주문 폼 가격 input 에 자동 채움
+
+데이터는 약 15분 지연이지만 학습용으론 충분.
 
 ### 3. Server Component + RPC 함수 위주
 
@@ -311,8 +318,11 @@ if (user && !ALLOWED_EMAILS.includes(user.email!)) {
 **Q. 스킬 트리가 비어있음**
 → `pnpm seed:skills` 실행. ANTHROPIC_API_KEY 설정 확인.
 
-**Q. 차트가 "Invalid symbol" 또는 안 뜸**
-→ TradingView 가 해당 종목 미지원. 매매 화면의 "네이버 증권" 우회 링크로 확인.
+**Q. 차트가 비어있거나 "시세 데이터가 없어요" 에러**
+→ Yahoo Finance 가 해당 종목 미지원이거나 일시적 장애. 매매 화면의 "네이버 증권" 우회 링크로 확인.
+
+**Q. 시드 스크립트 실행 시 ".env.local 에 ... 가 설정되어 있지 않아요" 에러**
+→ `.env.local` 이 프로젝트 루트에 있는지, Supabase URL/키 + Anthropic 키가 다 들어가 있는지 확인.
 
 **Q. 매매 시 "insufficient_cash"**
 → 시작 자본 1천만원 초과 시도. 더 작은 수량으로 재시도 또는 매도로 현금화.
@@ -329,6 +339,23 @@ if (user && !ALLOWED_EMAILS.includes(user.email!)) {
 
 MIT — 자유롭게 fork 해서 본인 학습용으로 쓰세요.
 다만 KIS / TradingView / Anthropic 각자의 ToS 는 별도 준수 (LICENSE 파일 참고).
+
+---
+
+## 변경 이력
+
+### v0.2 — 2026-04-26
+- TradingView 임베드 → 자체 캔들 차트 (`lightweight-charts` + Yahoo Finance)
+  → KRX 시세 무료 임베드 가능, 거래량 동시 표시, 한국 컨벤션 빨강↑/파랑↓
+- 시드 스크립트가 `.env.local` 을 명시적으로 로드 (이전 버전은 `.env` 만 읽어 실패)
+- 매매 페이지에서 종목 변경 시 마지막 종가 자동 입력
+- 데스크탑 우선 반응형 레이아웃 (`AppShell` + 사이드바)
+- KIS 개인 모드 가드 추가 (`lib/kis/guard.ts`)
+
+### v0.1 — 초기 버전
+- Next.js 15 + Supabase + Anthropic 통합 베이스
+- 14개 테이블 + RLS, 매매/포지션/포트폴리오 흐름
+- 14개 스킬 + 학습 모듈 + 자동 콘텐츠 생성
 
 ---
 

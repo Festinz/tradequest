@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Home, Sparkles, TrendingUp, Briefcase, User, LogOut } from "lucide-react";
+import { Home, Sparkles, TrendingUp, Briefcase, User, LogOut, Activity } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { Flame, Heart, Zap } from "lucide-react";
 
@@ -14,6 +14,7 @@ const NAV = [
   { href: "/skills", icon: Sparkles, label: "스킬" },
   { href: "/trade", icon: TrendingUp, label: "매매" },
   { href: "/portfolio", icon: Briefcase, label: "포트폴리오" },
+  { href: "/insights", icon: Activity, label: "인사이트" },
   { href: "/profile", icon: User, label: "프로필" },
 ];
 
@@ -97,7 +98,7 @@ export default async function AppShell({
 
       {/* 모바일 하단 탭바 */}
       <nav className="fixed inset-x-0 bottom-0 z-30 border-t border-border bg-surface-0/95 backdrop-blur md:hidden">
-        <ul className="grid grid-cols-5">
+        <ul className="grid grid-cols-6">
           {NAV.map((n) => {
             const Icon = n.icon;
             const isActive = active === n.href;

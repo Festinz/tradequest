@@ -1,9 +1,14 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { Sparkles, Trophy, ArrowRight } from "lucide-react";
+import { Sparkles, Trophy, ArrowRight, Activity } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { formatKRW, formatPct, pnlColor } from "@/lib/utils";
+import { loadHoldings } from "@/lib/portfolio/holdings";
+import { loadInsights } from "@/lib/insights/load";
 import AppShell from "@/components/AppShell";
+import InsightCard from "@/components/insights/InsightCard";
+
+export const dynamic = "force-dynamic";
 
 const CLASS_LABEL: Record<string, string> = {
   chartist: "차트 분석가",
@@ -26,26 +31,27 @@ export default async function HomePage() {
   if (!character) redirect("/onboarding");
 
   const today = new Date().toISOString().slice(0, 10);
-  await supabase.rpc("ensure_daily_missions", { p_user_id: user.id, p_date: today });
-  await supabase.rpc("touch_streak", { p_user_id: user.id, p_date: today });
+  await supabase.rpc("ensure_daily_missions", {
+    p_user_id: user.id,
+    p_date: today,
+  });
+  await supabase.rpc("touch_streak", {
+    p_user_id: user.id,
+    p_date: today,
+  });
 
-  const { data: quests } = await supabase
-    .from("daily_missions")
-    .select("*")
-    .eq("user_id", user.id)
-    .eq("date", today)
-    .order("exp_reward");
+  const [{ data: quests }, holdings, { insights }] = await Promise.all([
+    supabase
+      .from("daily_missions")
+      .select("*")
+      .eq("user_id", user.id)
+      .eq("date", today)
+      .order("exp_reward"),
+    loadHoldings(supabase, user.id),
+    loadInsights(supabase, user.id),
+  ]);
 
-  const { data: positions } = await supabase
-    .from("positions")
-    .select("ticker, qty, avg_price, stocks(name)")
-    .eq("user_id", user.id)
-    .limit(5);
-
-  const positionsValue = (positions ?? []).reduce(
-    (s, p) => s + p.qty * p.avg_price,
-    0
-  );
+  const positionsValue = holdings.reduce((s, h) => s + h.market_value, 0);
   const totalAssets = character.cash_balance + positionsValue;
 
   const { data: earnedTrophies } = await supabase
@@ -58,10 +64,11 @@ export default async function HomePage() {
   const expPct = Math.min(100, Math.round((character.exp / expThreshold) * 100));
   const totalPnlPct = ((totalAssets - 10000000) / 10000000) * 100;
   const doneCount = (quests ?? []).filter((q) => q.status === "done").length;
+  const top3 = insights.slice(0, 3);
 
   return (
     <AppShell active="/">
-      {/* 캐릭터 + 자산 카드 */}
+      {/* Hero — 캐릭터 + 자산 카드 */}
       <section className="mb-6 rounded-card border border-border bg-surface-0 p-6 shadow-card">
         <div className="flex flex-wrap items-center gap-6">
           <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-full bg-brand/10 text-4xl">
@@ -70,7 +77,8 @@ export default async function HomePage() {
           <div className="min-w-0 flex-1">
             <p className="text-h2">{character.name}</p>
             <p className="text-caption text-text-2">
-              {CLASS_LABEL[character.class] ?? character.class} · Lv.{character.level}
+              {CLASS_LABEL[character.class] ?? character.class} · Lv.
+              {character.level}
             </p>
             <div className="mt-3 max-w-md">
               <div className="mb-1 flex justify-between text-caption text-text-2">
@@ -80,7 +88,10 @@ export default async function HomePage() {
                 </span>
               </div>
               <div className="h-2 overflow-hidden rounded-full bg-surface-2">
-                <div className="h-full bg-exp transition-all" style={{ width: `${expPct}%` }} />
+                <div
+                  className="h-full bg-exp transition-all"
+                  style={{ width: `${expPct}%` }}
+                />
               </div>
             </div>
           </div>
@@ -88,15 +99,54 @@ export default async function HomePage() {
             <p className="text-caption text-text-2">총 자산</p>
             <p className="font-mono text-display">{formatKRW(totalAssets)}</p>
             <p className={`text-caption font-mono ${pnlColor(totalPnlPct)}`}>
-              {formatPct(totalPnlPct)} (+{formatKRW(totalAssets - 10000000)})
+              {formatPct(totalPnlPct)} ({formatKRW(totalAssets - 10000000)})
             </p>
           </div>
         </div>
       </section>
 
+      {/* Top Insights (NEW) */}
+      <section className="mb-6 rounded-card border border-border bg-surface-0 p-6 shadow-card">
+        <div className="mb-4 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <h2 className="text-h3">
+              <Activity className="mr-1 inline h-4 w-4 align-[-2px] text-brand" />
+              Top Insights
+            </h2>
+            {insights.length > 0 && (
+              <span className="rounded-chip bg-brand/10 px-2 py-0.5 text-caption text-brand">
+                {top3.length}/{insights.length}건 · 우선순위 정렬
+              </span>
+            )}
+          </div>
+          <Link
+            href="/insights"
+            className="inline-flex items-center gap-0.5 text-caption text-brand"
+          >
+            전체 보기 <ArrowRight className="h-3 w-3" />
+          </Link>
+        </div>
+        {top3.length > 0 ? (
+          <div className="space-y-2">
+            {top3.map((ins) => (
+              <InsightCard
+                key={`${ins.rule_id}-${ins.ticker}`}
+                insight={ins}
+                compact
+              />
+            ))}
+          </div>
+        ) : (
+          <p className="rounded-card border-2 border-dashed border-border bg-surface-1 p-6 text-center text-caption text-text-2">
+            {holdings.length === 0
+              ? "보유 종목이 아직 없어. 매매를 시작하면 분석 신호가 떠."
+              : "현재 발동 중인 신호가 없어. 시장이 평온해."}
+          </p>
+        )}
+      </section>
+
       {/* 2열 그리드: 퀘스트 + 보유종목 */}
       <div className="grid gap-6 lg:grid-cols-2">
-        {/* 일일 퀘스트 */}
         <section className="rounded-card border border-border bg-surface-0 p-6 shadow-card">
           <div className="mb-4 flex items-center justify-between">
             <h2 className="text-h3">오늘의 퀘스트</h2>
@@ -111,17 +161,23 @@ export default async function HomePage() {
                 <li
                   key={q.id}
                   className={`flex items-center gap-3 rounded-card border p-4 ${
-                    done ? "border-bullish/30 bg-bullish/5" : "border-border bg-surface-1"
+                    done
+                      ? "border-bullish/30 bg-bullish/5"
+                      : "border-border bg-surface-1"
                   }`}
                 >
                   <span
                     className={`grid h-6 w-6 place-items-center rounded-full text-xs ${
-                      done ? "bg-bullish text-white" : "border border-border text-text-3"
+                      done
+                        ? "bg-bullish text-white"
+                        : "border border-border text-text-3"
                     }`}
                   >
                     {done ? "✓" : ""}
                   </span>
-                  <p className={`flex-1 text-body ${done ? "text-text-3 line-through" : "text-text-1"}`}>
+                  <p
+                    className={`flex-1 text-body ${done ? "text-text-3 line-through" : "text-text-1"}`}
+                  >
                     {q.title}
                   </p>
                   <span className="inline-flex items-center gap-1 text-caption text-exp">
@@ -138,35 +194,43 @@ export default async function HomePage() {
           </ul>
         </section>
 
-        {/* 보유 종목 */}
         <section className="rounded-card border border-border bg-surface-0 p-6 shadow-card">
           <div className="mb-4 flex items-center justify-between">
             <h2 className="text-h3">보유 종목</h2>
-            <Link href="/portfolio" className="inline-flex items-center gap-0.5 text-caption text-brand">
+            <Link
+              href="/portfolio"
+              className="inline-flex items-center gap-0.5 text-caption text-brand"
+            >
               포트폴리오 <ArrowRight className="h-3 w-3" />
             </Link>
           </div>
-          {positions && positions.length > 0 ? (
+          {holdings.length > 0 ? (
             <ul className="space-y-2">
-              {positions.map((p) => {
-                const stock = (p as unknown as { stocks: { name: string } | null }).stocks;
-                return (
-                  <li key={p.ticker}>
-                    <Link
-                      href={`/trade?symbol=KRX:${p.ticker}`}
-                      className="flex items-center justify-between rounded-card border border-border bg-surface-1 p-4 hover:border-brand"
-                    >
-                      <div>
-                        <p className="text-body">{stock?.name ?? p.ticker}</p>
-                        <p className="text-caption text-text-3">
-                          {p.qty}주 · 평단 {formatKRW(p.avg_price)}
-                        </p>
-                      </div>
-                      <p className="font-mono text-body">{formatKRW(p.qty * p.avg_price)}</p>
-                    </Link>
-                  </li>
-                );
-              })}
+              {holdings.slice(0, 5).map((h) => (
+                <li key={h.ticker}>
+                  <Link
+                    href={`/trade?symbol=KRX:${h.ticker}`}
+                    className="flex items-center justify-between rounded-card border border-border bg-surface-1 p-4 hover:border-brand"
+                  >
+                    <div>
+                      <p className="text-body">{h.name}</p>
+                      <p className="text-caption text-text-3">
+                        {h.qty}주 · 평단 {formatKRW(h.avg_price)}
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <p className="font-mono text-body">
+                        {formatKRW(h.market_value)}
+                      </p>
+                      <p
+                        className={`font-mono text-caption ${pnlColor(h.daily_change_pct)}`}
+                      >
+                        {formatPct(h.daily_change_pct)}
+                      </p>
+                    </div>
+                  </Link>
+                </li>
+              ))}
             </ul>
           ) : (
             <Link
@@ -185,21 +249,30 @@ export default async function HomePage() {
         <section className="rounded-card border border-border bg-surface-0 p-6 shadow-card lg:col-span-2">
           <div className="mb-4 flex items-center justify-between">
             <h2 className="text-h3">트로피</h2>
-            <Link href="/profile/trophies" className="inline-flex items-center gap-0.5 text-caption text-brand">
+            <Link
+              href="/profile/trophies"
+              className="inline-flex items-center gap-0.5 text-caption text-brand"
+            >
               전체 보기 <ArrowRight className="h-3 w-3" />
             </Link>
           </div>
           {earnedTrophies && earnedTrophies.length > 0 ? (
             <ul className="grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-6">
               {earnedTrophies.map((t) => {
-                const tro = (t as unknown as { trophies: { name: string; tier: string } }).trophies;
+                const tro = (
+                  t as unknown as {
+                    trophies: { name: string; tier: string };
+                  }
+                ).trophies;
                 return (
                   <li
                     key={t.trophy_id}
                     className="flex flex-col items-center gap-1 rounded-card border border-border bg-surface-1 p-3 text-center"
                   >
                     <Trophy className="h-7 w-7 text-tier-rare" />
-                    <span className="text-caption text-text-2">{tro?.name ?? t.trophy_id}</span>
+                    <span className="text-caption text-text-2">
+                      {tro?.name ?? t.trophy_id}
+                    </span>
                   </li>
                 );
               })}
@@ -214,10 +287,13 @@ export default async function HomePage() {
         <section className="rounded-card border border-border bg-gradient-to-br from-brand/10 to-transparent p-6">
           <div className="mb-2 flex items-center gap-2">
             <span className="text-h3">오늘의 시장</span>
-            <span className="rounded-chip bg-brand/10 px-2 py-0.5 text-caption text-brand">AI 브리핑</span>
+            <span className="rounded-chip bg-brand/10 px-2 py-0.5 text-caption text-brand">
+              AI 브리핑
+            </span>
           </div>
           <p className="text-body text-text-2">
-            매매 화면에서 진짜 차트로 시장을 확인해 봐. AI 코치는 매매 직전에 진입 근거를 함께 점검해 줘.
+            매매 화면에서 진짜 차트로 시장을 확인해 봐. AI 코치는 매매 직전에
+            진입 근거를 함께 점검해 줘.
           </p>
           <Link
             href="/trade"

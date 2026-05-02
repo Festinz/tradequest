@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>TradeQuest Insights — 목업 인덱스</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css">
+<link rel="stylesheet" href="_shared.css">
+</head>
+<body>
+<div style="max-width:720px; margin:48px auto; padding:0 24px;">
+  <h1 class="h1" style="margin-bottom:8px;">TradeQuest Insights — 목업</h1>
+  <p class="body text-2" style="margin-bottom:32px;">MVP 스코프 3개 화면. 실제 Tailwind 토큰 + Pretendard + 한국 시장 컨벤션 (빨강↑/파랑↓) 1:1 매핑.</p>
+
+  <div style="display:flex; flex-direction:column; gap:12px;">
+    <a href="01-home-overview.html" class="card" style="text-decoration:none; color:inherit; display:block;">
+      <h2 class="h3" style="margin-bottom:4px;">① 홈 오버뷰</h2>
+      <p class="caption text-2" style="margin:0;">Hero KPI · Top 3 Insights (NEW) · 일일 퀘스트 · 보유 종목 · 트로피 + AI 브리핑</p>
+    </a>
+    <a href="02-insights-feed.html" class="card" style="text-decoration:none; color:inherit; display:block;">
+      <h2 class="h3" style="margin-bottom:4px;">② 인사이트 피드 (신규 페이지)</h2>
+      <p class="caption text-2" style="margin:0;">8건의 INS 발동 · severity 그룹 (warning / bearish / bullish / info) · 시간 + 차트 점프</p>
+    </a>
+    <a href="03-portfolio-sector.html" class="card" style="text-decoration:none; color:inherit; display:block;">
+      <h2 class="h3" style="margin-bottom:4px;">③ 포트폴리오 + 섹터 트리맵 (VIZ-007)</h2>
+      <p class="caption text-2" style="margin:0;">4-card 요약 · 섹터 트리맵 (NEW) · INS-009 인라인 · 보유 + 매매 기록</p>
+    </a>
+  </div>
+
+  <p class="caption text-3" style="margin-top:32px; text-align:center;">목업은 정적 HTML. 실제 구현은 Next.js 15 RSC + Tailwind. tailwind.config.ts 색 토큰과 1:1 매핑되어 시각 차이 거의 없음.</p>
+</div>
+</body>
+</html>

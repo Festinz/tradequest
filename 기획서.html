@@ -1,0 +1,919 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>TradeQuest Insights — 투자 분석 대시보드 기획서</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css">
+<style>
+  :root {
+    --brand: #6366F1;
+    --brand-dark: #4F46E5;
+    --bullish: #EF4444;
+    --bearish: #3B82F6;
+    --text-1: #0F172A;
+    --text-2: #475569;
+    --text-3: #94A3B8;
+    --border: #E2E8F0;
+    --surface-0: #FFFFFF;
+    --surface-1: #F8FAFC;
+    --surface-2: #F1F5F9;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    font-family: "Pretendard Variable", Pretendard, -apple-system, system-ui, sans-serif;
+    color: var(--text-1);
+    background: white;
+    line-height: 1.6;
+    font-size: 11pt;
+  }
+  .page {
+    width: 210mm;
+    min-height: 297mm;
+    margin: 0 auto 20px;
+    padding: 22mm 18mm;
+    background: white;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.06);
+    page-break-after: always;
+    position: relative;
+  }
+  .page:last-child { page-break-after: auto; }
+
+  /* 표지 */
+  .cover {
+    background: linear-gradient(135deg, var(--brand) 0%, var(--brand-dark) 100%);
+    color: white;
+    padding: 0;
+    display: flex; flex-direction: column; justify-content: space-between;
+  }
+  .cover-inner { padding: 30mm 18mm; }
+  .cover .badge {
+    display: inline-block;
+    background: rgba(255,255,255,0.18);
+    backdrop-filter: blur(8px);
+    padding: 6px 14px; border-radius: 999px;
+    font-size: 10pt; font-weight: 500;
+    margin-bottom: 24px;
+  }
+  .cover h1 {
+    font-size: 38pt; font-weight: 800;
+    letter-spacing: -0.03em; margin: 0 0 8px;
+    line-height: 1.1;
+  }
+  .cover .subtitle {
+    font-size: 18pt; font-weight: 400;
+    color: rgba(255,255,255,0.88); margin: 0 0 4px;
+  }
+  .cover .tagline {
+    font-size: 13pt; color: rgba(255,255,255,0.7);
+    margin: 24px 0 0; max-width: 480px;
+  }
+  .cover-footer {
+    padding: 18mm; display: flex; justify-content: space-between;
+    border-top: 1px solid rgba(255,255,255,0.2);
+    font-size: 10pt; color: rgba(255,255,255,0.85);
+  }
+
+  h1, h2, h3, h4 { letter-spacing: -0.02em; color: var(--text-1); }
+  h1 { font-size: 22pt; margin: 0 0 12px; font-weight: 800; }
+  h2 { font-size: 16pt; margin: 32px 0 10px; font-weight: 700; padding-bottom: 8px; border-bottom: 2px solid var(--brand); }
+  h3 { font-size: 12pt; margin: 18px 0 6px; font-weight: 700; color: var(--brand); }
+  h4 { font-size: 11pt; margin: 12px 0 4px; font-weight: 600; }
+
+  p { margin: 0 0 10px; color: var(--text-1); }
+  .lead { font-size: 12pt; color: var(--text-2); line-height: 1.7; }
+  ul, ol { margin: 8px 0 14px; padding-left: 22px; }
+  li { margin: 4px 0; }
+  code {
+    font-family: 'JetBrains Mono', Menlo, monospace;
+    font-size: 9.5pt;
+    background: var(--surface-2);
+    padding: 1px 6px; border-radius: 4px;
+    color: var(--brand-dark);
+  }
+  pre {
+    background: var(--surface-1);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--brand);
+    padding: 12px 16px; border-radius: 6px;
+    font-family: 'JetBrains Mono', Menlo, monospace;
+    font-size: 9pt; line-height: 1.55;
+    overflow-x: auto;
+    margin: 10px 0;
+  }
+  blockquote {
+    margin: 12px 0; padding: 10px 16px;
+    background: var(--surface-1); border-left: 4px solid var(--brand);
+    color: var(--text-2); font-size: 10.5pt;
+    border-radius: 4px;
+  }
+
+  table {
+    width: 100%; border-collapse: collapse;
+    margin: 10px 0 16px; font-size: 10pt;
+  }
+  th { background: var(--surface-2); text-align: left; padding: 8px 10px; font-weight: 600; border-bottom: 2px solid var(--border); }
+  td { padding: 7px 10px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  tr:last-child td { border-bottom: none; }
+
+  .grid { display: grid; gap: 12px; }
+  .grid-2 { grid-template-columns: 1fr 1fr; }
+  .grid-3 { grid-template-columns: 1fr 1fr 1fr; }
+  .grid-4 { grid-template-columns: repeat(4, 1fr); }
+
+  .card {
+    background: var(--surface-0);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px 16px;
+  }
+  .card.brand { background: linear-gradient(135deg, rgba(99,102,241,0.07), rgba(99,102,241,0)); border-color: rgba(99,102,241,0.25); }
+  .card-label { font-size: 9pt; color: var(--text-2); text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600; margin-bottom: 4px; }
+  .card-value { font-size: 13pt; font-weight: 700; color: var(--text-1); }
+  .card-sub { font-size: 9.5pt; color: var(--text-3); margin-top: 4px; }
+
+  .pill {
+    display: inline-block; padding: 2px 10px; border-radius: 999px;
+    font-size: 9pt; font-weight: 500;
+    background: var(--surface-2); color: var(--text-2);
+  }
+  .pill.brand { background: rgba(99,102,241,0.12); color: var(--brand); }
+  .pill.bullish { background: rgba(239,68,68,0.1); color: var(--bullish); }
+  .pill.bearish { background: rgba(59,130,246,0.1); color: var(--bearish); }
+  .pill.warning { background: rgba(245,158,11,0.12); color: #B45309; }
+
+  /* 흐름도 */
+  .flow {
+    display: flex; align-items: center; gap: 10px;
+    margin: 14px 0; flex-wrap: wrap;
+  }
+  .flow-step {
+    flex: 1; min-width: 120px; padding: 12px 10px;
+    background: var(--surface-1);
+    border: 2px solid var(--border);
+    border-radius: 8px; text-align: center;
+    font-size: 10pt;
+  }
+  .flow-step.active {
+    border-color: var(--brand); background: rgba(99,102,241,0.05);
+  }
+  .flow-step strong { display: block; font-size: 10.5pt; margin-bottom: 3px; color: var(--brand); }
+  .flow-arrow { color: var(--text-3); font-size: 18pt; }
+
+  /* 대시보드 목업 */
+  .mockup {
+    border: 1px solid var(--border); border-radius: 8px;
+    overflow: hidden; margin: 12px 0;
+    background: var(--surface-0);
+  }
+  .mockup-bar {
+    background: var(--surface-2); padding: 10px 14px;
+    border-bottom: 1px solid var(--border);
+    display: flex; justify-content: space-between; align-items: center;
+    font-size: 9pt; color: var(--text-2);
+  }
+  .mockup-body {
+    display: grid; grid-template-columns: 180px 1fr;
+    min-height: 300px;
+  }
+  .mockup-side {
+    background: var(--surface-1); padding: 14px 12px;
+    border-right: 1px solid var(--border); font-size: 9.5pt;
+  }
+  .mockup-side .nav-item {
+    padding: 6px 10px; border-radius: 4px; margin-bottom: 2px;
+    color: var(--text-2);
+  }
+  .mockup-side .nav-item.active {
+    background: var(--brand); color: white;
+  }
+  .mockup-main { padding: 14px; display: grid; gap: 10px; grid-template-columns: 2fr 1fr; }
+  .mockup-block {
+    border: 1px solid var(--border); border-radius: 6px;
+    padding: 10px; background: white;
+    display: flex; flex-direction: column; gap: 4px;
+  }
+  .mockup-block-label { font-size: 8.5pt; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.05em; }
+  .mockup-block-content {
+    background: linear-gradient(180deg, transparent, var(--surface-2));
+    height: 80px; border-radius: 4px;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--text-3); font-size: 9pt;
+  }
+  .mockup-block.span-2 { grid-column: span 2; }
+
+  /* 페이지 헤더/푸터 */
+  .page-header {
+    display: flex; justify-content: space-between;
+    color: var(--text-3); font-size: 9pt;
+    padding-bottom: 12px; margin-bottom: 18px;
+    border-bottom: 1px solid var(--border);
+  }
+  .page-footer {
+    position: absolute; bottom: 12mm; left: 18mm; right: 18mm;
+    display: flex; justify-content: space-between;
+    color: var(--text-3); font-size: 9pt;
+    padding-top: 8px; border-top: 1px solid var(--border);
+  }
+
+  .toc-item {
+    display: flex; justify-content: space-between;
+    padding: 6px 0; border-bottom: 1px dashed var(--border);
+    font-size: 11pt;
+  }
+  .toc-item span:last-child { color: var(--text-3); font-variant-numeric: tabular-nums; }
+
+  /* 인쇄 */
+  @media print {
+    body { background: white; }
+    .page { box-shadow: none; margin: 0; }
+    @page { size: A4; margin: 0; }
+  }
+  .print-hint {
+    position: fixed; right: 16px; bottom: 16px;
+    background: var(--brand); color: white;
+    padding: 12px 18px; border-radius: 8px;
+    font-size: 11pt; font-weight: 500;
+    box-shadow: 0 6px 20px rgba(99,102,241,0.4);
+    cursor: pointer; z-index: 99;
+  }
+  @media print { .print-hint { display: none; } }
+</style>
+</head>
+<body>
+
+<div class="print-hint" onclick="window.print()">📄 PDF 로 저장 (Ctrl+P)</div>
+
+<!-- ========== 표지 ========== -->
+<section class="page cover">
+  <div class="cover-inner">
+    <span class="badge">2026 금융 데이터 시각화 해커톤</span>
+    <h1>TradeQuest Insights</h1>
+    <p class="subtitle">Skills.md 기반 범용 투자 대시보드</p>
+    <p class="tagline">
+      투자 분석 규칙을 정의한 단일 마크다운 문서로,
+      어떤 투자 데이터든 일관된 시각화·인사이트로 자동 변환하는 데이터 기반 대시보드 시스템
+    </p>
+  </div>
+  <div class="cover-footer">
+    <span>제출자 · Festinz (shin)</span>
+    <span>2026년 4월 26일</span>
+  </div>
+</section>
+
+<!-- ========== 목차 ========== -->
+<section class="page">
+  <div class="page-header">
+    <span>TradeQuest Insights · 기획서</span>
+    <span>Table of Contents</span>
+  </div>
+  <h1>목차</h1>
+  <div style="margin-top: 24px;">
+    <div class="toc-item"><span>1. 서비스 개요</span><span>03</span></div>
+    <div class="toc-item"><span>2. 분석 흐름 설계</span><span>05</span></div>
+    <div class="toc-item"><span>3. 대시보드 구성</span><span>07</span></div>
+    <div class="toc-item"><span>4. Skills.md 설계 방향</span><span>09</span></div>
+    <div class="toc-item"><span>5. 확장 기능 아이디어</span><span>11</span></div>
+    <div class="toc-item"><span>6. 기술 스택 + 아키텍처</span><span>12</span></div>
+    <div class="toc-item"><span>7. 차별화 포인트</span><span>13</span></div>
+    <div class="toc-item"><span>8. 일정 및 마일스톤</span><span>14</span></div>
+    <div class="toc-item"><span>부록 — Skills.md 발췌</span><span>15</span></div>
+  </div>
+  <div class="page-footer"><span>TradeQuest Insights</span><span>02</span></div>
+</section>
+
+<!-- ========== 1. 서비스 개요 ========== -->
+<section class="page">
+  <div class="page-header"><span>1. 서비스 개요</span><span>Service Overview</span></div>
+  <h1>1. 서비스 개요</h1>
+
+  <h2>1.1 문제 정의</h2>
+  <p class="lead">
+    금융 기업과 개인 투자자 모두 다음 3가지 반복 문제를 안고 있다.
+  </p>
+  <div class="grid grid-3">
+    <div class="card">
+      <div class="card-label">Problem 1</div>
+      <div class="card-value">데이터 형태 비표준</div>
+      <div class="card-sub">증권사·거래소·뉴스마다 데이터 스키마가 다름. 매번 파서를 새로 짠다.</div>
+    </div>
+    <div class="card">
+      <div class="card-label">Problem 2</div>
+      <div class="card-value">분석 기준 분산</div>
+      <div class="card-sub">RSI 계산 윈도우, 과매수 임계값이 분석가마다 다름. 결과 재현성 낮음.</div>
+    </div>
+    <div class="card">
+      <div class="card-label">Problem 3</div>
+      <div class="card-value">시각화 일관성 부재</div>
+      <div class="card-sub">대시보드마다 색·폰트·차트 종류가 달라 학습 곡선 큼.</div>
+    </div>
+  </div>
+
+  <h2>1.2 솔루션 개요</h2>
+  <p>
+    <strong>Skills.md</strong> 라는 단일 마크다운 문서에 다음 5가지를 선언적으로 정의한다.
+  </p>
+  <ol>
+    <li><strong>입력 인터페이스</strong> — 모든 데이터를 4가지 표준 타입으로 정규화</li>
+    <li><strong>지표 계산 규칙</strong> — IND-001 ~ IND-012 (SMA/EMA/RSI/MACD/볼린저/OBV/HV/MDD/Sharpe/Beta/PER 등)</li>
+    <li><strong>시각화 선택 기준</strong> — 데이터 형태 → 차트 종류 매핑 (VIZ-001 ~ VIZ-011)</li>
+    <li><strong>인사이트 생성 규칙</strong> — 조건/메시지/강도/액션 (INS-001 ~ INS-012)</li>
+    <li><strong>리포트 조립 흐름</strong> — 4단계 stateless 파이프라인</li>
+  </ol>
+  <p>
+    Skills.md 만 수정하면 코드 변경 없이 새 지표·차트·인사이트가 추가된다.
+    분석 엔진은 이 규칙들을 결정적(deterministic)으로 적용해 어떤 투자 데이터에서도 일관된 대시보드를 생성한다.
+  </p>
+
+  <h2>1.3 핵심 가치 제안</h2>
+  <div class="grid grid-2" style="margin-top: 12px;">
+    <div class="card brand">
+      <h4>🎯 일관성</h4>
+      <p style="font-size: 10.5pt; margin: 0;">동일 입력 → 동일 차트 + 동일 인사이트. 분석가가 바뀌어도 결과 재현 가능.</p>
+    </div>
+    <div class="card brand">
+      <h4>🔧 확장성</h4>
+      <p style="font-size: 10.5pt; margin: 0;">새 지표·인사이트 추가 시 코드 빌드 없이 Skills.md 수정만으로 즉시 반영.</p>
+    </div>
+    <div class="card brand">
+      <h4>🇰🇷 한국 시장 최적화</h4>
+      <p style="font-size: 10.5pt; margin: 0;">빨강↑/파랑↓ 컨벤션, 한국어 인사이트, KOSPI/KOSDAQ 일봉 무료 (네이버·Yahoo).</p>
+    </div>
+    <div class="card brand">
+      <h4>🤖 AI 보강</h4>
+      <p style="font-size: 10.5pt; margin: 0;">결정적 규칙 위에 Claude Haiku 가 자연어 해설을 더해 가독성 ↑.</p>
+    </div>
+  </div>
+
+  <h2>1.4 타겟 사용자</h2>
+  <table>
+    <thead><tr><th>유형</th><th>핵심 니즈</th><th>가치</th></tr></thead>
+    <tbody>
+      <tr><td>개인 투자자</td><td>매매 전 객관적 진단</td><td>인사이트 카드 + AI 코치</td></tr>
+      <tr><td>금융 분석가</td><td>일관된 분석 프레임워크</td><td>Skills.md 의 결정적 규칙</td></tr>
+      <tr><td>투자 입문자</td><td>학습 + 실전 연결</td><td>스킬 트리 + 모의매매 통합</td></tr>
+      <tr><td>핀테크 개발자</td><td>대시보드 베이스 템플릿</td><td>오픈소스, MIT 라이선스</td></tr>
+    </tbody>
+  </table>
+
+  <div class="page-footer"><span>1. 서비스 개요</span><span>03</span></div>
+</section>
+
+<!-- ========== 2. 분석 흐름 설계 ========== -->
+<section class="page">
+  <div class="page-header"><span>2. 분석 흐름 설계</span><span>Analysis Flow</span></div>
+  <h1>2. 분석 흐름 설계</h1>
+
+  <h2>2.1 전체 데이터 파이프라인</h2>
+  <p>분석 엔진은 4단계 stateless 파이프라인으로 구성된다. 각 단계는 입력→출력만 정의되며 캐시 가능.</p>
+  <div class="flow">
+    <div class="flow-step active"><strong>1. 정규화</strong>외부 데이터 → 표준 인터페이스</div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step active"><strong>2. 지표 계산</strong>IND 규칙 12개 적용</div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step active"><strong>3. 인사이트 추출</strong>INS 규칙 12개 평가</div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step active"><strong>4. 리포트 조립</strong>슬롯 매핑 + AI 해설</div>
+  </div>
+
+  <h2>2.2 단계별 상세</h2>
+
+  <h3>① 정규화 단계</h3>
+  <p>외부 데이터 (KIS, Yahoo, 네이버 금융, KRX OpenAPI) 를 4가지 표준 타입으로 변환:</p>
+  <pre>type Candle   = { time, open, high, low, close, volume }
+type Stock    = { ticker, name, market, sector, per, pbr, roe, ... }
+type Position = { ticker, qty, avg_price, current_price }
+type Trade    = { ticker, side, qty, price, opened_at, closed_at, pnl }</pre>
+  <p>누락 거래일은 forward-fill 금지 (NULL 유지). 시계열은 오래된→최신 정렬.</p>
+
+  <h3>② 지표 계산 단계</h3>
+  <p>Skills.md §2 의 모든 IND 규칙을 적용해 derived dataset 생성:</p>
+  <table>
+    <thead><tr><th>지표</th><th>규칙 ID</th><th>윈도우</th><th>활용</th></tr></thead>
+    <tbody>
+      <tr><td>SMA / EMA</td><td>IND-001/002</td><td>5/20/60일, 12/26일</td><td>추세 판별</td></tr>
+      <tr><td>RSI</td><td>IND-003</td><td>14일</td><td>과매수/과매도</td></tr>
+      <tr><td>MACD</td><td>IND-004</td><td>12-26-9</td><td>모멘텀 전환</td></tr>
+      <tr><td>볼린저</td><td>IND-005</td><td>20일, 2σ</td><td>변동성 채널</td></tr>
+      <tr><td>OBV</td><td>IND-006</td><td>누적</td><td>거래량 추세</td></tr>
+      <tr><td>HV (변동성)</td><td>IND-007</td><td>20/60일 연환산</td><td>리스크 측정</td></tr>
+      <tr><td>MDD</td><td>IND-009</td><td>전구간</td><td>최대낙폭</td></tr>
+      <tr><td>Sharpe</td><td>IND-010</td><td>전구간</td><td>위험조정수익</td></tr>
+      <tr><td>Beta</td><td>IND-012</td><td>1년</td><td>시장 민감도</td></tr>
+    </tbody>
+  </table>
+  <p style="font-size: 10pt; color: var(--text-2);">동일 데이터 + 동일 규칙 → 동일 결과. 60초 SWR 캐시.</p>
+
+  <div class="page-footer"><span>2. 분석 흐름 설계</span><span>05</span></div>
+</section>
+
+<section class="page">
+  <div class="page-header"><span>2. 분석 흐름 설계 (계속)</span><span>Analysis Flow</span></div>
+
+  <h3>③ 인사이트 추출 단계</h3>
+  <p>각 INS 규칙은 <code>{조건, 메시지, 강도, 추천 액션}</code> 4요소로 구성. 발동된 인사이트는 강도순 정렬:</p>
+  <p><span class="pill warning">warning</span> &nbsp; <span class="pill bearish">bearish</span> &nbsp; <span class="pill bullish">bullish</span> &nbsp; <span class="pill">info</span></p>
+  <p style="margin-top: 12px;">예시:</p>
+  <pre>INS-001 과매수 경고
+  조건: RSI > 70 AND 직전 5일 RSI 평균 ≥ 65
+  메시지: "{종목명} 의 RSI 가 {값} 으로 과매수 영역. 단기 조정 가능성."
+  강도: warning
+  액션: "익절 분할 또는 신규 매수 보류"</pre>
+
+  <h3>④ 리포트 조립 단계</h3>
+  <p>대시보드 화면의 정해진 슬롯에 derived dataset 매핑:</p>
+  <table>
+    <thead><tr><th>슬롯</th><th>입력</th><th>차트</th><th>우선순위</th></tr></thead>
+    <tbody>
+      <tr><td>Hero</td><td>총자산 + 일간 손익</td><td>KPI 카드</td><td>1</td></tr>
+      <tr><td>Top Insights</td><td>severity 상위 3건</td><td>리스트</td><td>2</td></tr>
+      <tr><td>Price Chart</td><td>OHLCV + 매매시점</td><td>VIZ-001 + VIZ-010</td><td>3</td></tr>
+      <tr><td>Indicators</td><td>RSI, MACD</td><td>VIZ-002 + VIZ-009</td><td>4</td></tr>
+      <tr><td>Holdings</td><td>positions</td><td>VIZ-006 도넛</td><td>5</td></tr>
+      <tr><td>Sector</td><td>섹터별 합계</td><td>VIZ-007 트리맵</td><td>6</td></tr>
+      <tr><td>Correlation</td><td>일간수익률 상관</td><td>VIZ-008 히트맵</td><td>7</td></tr>
+      <tr><td>Backtest</td><td>가상 매매 누적</td><td>VIZ-011 면적</td><td>8</td></tr>
+    </tbody>
+  </table>
+
+  <h2>2.3 데이터 소스</h2>
+  <table>
+    <thead><tr><th>소스</th><th>용도</th><th>지연</th><th>비용</th></tr></thead>
+    <tbody>
+      <tr><td>네이버 금융 (siseJson)</td><td>한국 일봉 (1순위)</td><td>실시간 ~ 종가</td><td>무료</td></tr>
+      <tr><td>Yahoo Finance v8</td><td>해외 주식 + 폴백</td><td>15~20분 지연</td><td>무료</td></tr>
+      <tr><td>KIS Developers</td><td>본인 계좌 시세 (개인 모드)</td><td>실시간</td><td>본인 계좌 한정</td></tr>
+      <tr><td>KRX OpenAPI</td><td>종목 마스터 + EOD</td><td>당일 마감 후</td><td>무료, 공공데이터</td></tr>
+      <tr><td>Anthropic Claude</td><td>인사이트 자연어 해설</td><td>~2초</td><td>$0.10/사용자/월</td></tr>
+    </tbody>
+  </table>
+
+  <div class="page-footer"><span>2. 분석 흐름 설계</span><span>06</span></div>
+</section>
+
+<!-- ========== 3. 대시보드 구성 ========== -->
+<section class="page">
+  <div class="page-header"><span>3. 대시보드 구성</span><span>Dashboard Composition</span></div>
+  <h1>3. 대시보드 구성</h1>
+
+  <p class="lead">대시보드는 5개 메인 뷰로 구성된다. 모든 뷰는 Skills.md 의 슬롯 시스템을 따른다.</p>
+
+  <h2>3.1 메인 대시보드 (Overview)</h2>
+  <div class="mockup">
+    <div class="mockup-bar">
+      <span>TradeQuest Insights</span>
+      <span>🔥 7 ❤ 5 ⚡ 80 · 트레이더 창준 Lv.12</span>
+    </div>
+    <div class="mockup-body">
+      <div class="mockup-side">
+        <div class="nav-item active">홈</div>
+        <div class="nav-item">스킬</div>
+        <div class="nav-item">매매</div>
+        <div class="nav-item">포트폴리오</div>
+        <div class="nav-item">프로필</div>
+      </div>
+      <div class="mockup-main">
+        <div class="mockup-block span-2">
+          <div class="mockup-block-label">Hero · 자산 요약</div>
+          <div class="mockup-block-content">총자산 ₩10,842,100 · +8.4% · KPI</div>
+        </div>
+        <div class="mockup-block">
+          <div class="mockup-block-label">Top Insights</div>
+          <div class="mockup-block-content">3건 · 우선순위 정렬</div>
+        </div>
+        <div class="mockup-block">
+          <div class="mockup-block-label">오늘의 퀘스트</div>
+          <div class="mockup-block-content">1/3</div>
+        </div>
+        <div class="mockup-block span-2">
+          <div class="mockup-block-label">보유 종목 (Holdings)</div>
+          <div class="mockup-block-content">VIZ-006 도넛 + 손익률</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <h2>3.2 종목 분석 뷰</h2>
+  <p>선택 종목의 OHLCV + 모든 IND 지표 + INS 인사이트 종합:</p>
+  <div class="mockup">
+    <div class="mockup-bar"><span>📈 매매 — 삼성전자 005930</span><span>네이버 증권 ↗</span></div>
+    <div class="mockup-body">
+      <div class="mockup-side">
+        <div class="nav-item">홈</div>
+        <div class="nav-item">스킬</div>
+        <div class="nav-item active">매매</div>
+        <div class="nav-item">포트폴리오</div>
+        <div class="nav-item">프로필</div>
+      </div>
+      <div class="mockup-main">
+        <div class="mockup-block span-2">
+          <div class="mockup-block-label">VIZ-001 캔들 + VIZ-010 매매 마커</div>
+          <div class="mockup-block-content">한국 컨벤션 빨강↑/파랑↓ + 거래량</div>
+        </div>
+        <div class="mockup-block">
+          <div class="mockup-block-label">VIZ-009 RSI 게이지</div>
+          <div class="mockup-block-content">68 · 중립</div>
+        </div>
+        <div class="mockup-block">
+          <div class="mockup-block-label">매매 폼</div>
+          <div class="mockup-block-content">매수/매도 + AI 코치</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="page-footer"><span>3. 대시보드 구성</span><span>07</span></div>
+</section>
+
+<section class="page">
+  <div class="page-header"><span>3. 대시보드 구성 (계속)</span><span>Dashboard Composition</span></div>
+
+  <h2>3.3 포트폴리오 뷰</h2>
+  <p>보유 종목 + 매매 기록 + 자동 계산 통계:</p>
+  <div class="grid grid-4" style="margin: 12px 0;">
+    <div class="card"><div class="card-label">총 자산</div><div class="card-value">₩10,842,100</div><div class="card-sub" style="color: var(--bullish);">+8.4%</div></div>
+    <div class="card"><div class="card-label">예수금</div><div class="card-value">₩215,000</div></div>
+    <div class="card"><div class="card-label">주식 평가</div><div class="card-value">₩10,627,100</div><div class="card-sub">3종목</div></div>
+    <div class="card"><div class="card-label">승률</div><div class="card-value">67%</div><div class="card-sub">12건 청산</div></div>
+  </div>
+
+  <h2>3.4 섹터 / 시장 뷰</h2>
+  <ul>
+    <li><strong>VIZ-007 트리맵</strong>: 보유 종목 섹터별 평가금액 합계 → 비중 직관적 파악</li>
+    <li><strong>VIZ-008 히트맵</strong>: 종목간 일간수익률 상관계수 → 분산 효과 확인</li>
+    <li><strong>섹터 편중 인사이트</strong>: <code>INS-009</code> 자동 발동 (단일 섹터 50% 초과 시)</li>
+  </ul>
+
+  <h2>3.5 인사이트 피드</h2>
+  <p>발동된 모든 INS 규칙을 시간순으로 누적. 각 항목은 다음 구조:</p>
+  <div class="card" style="margin: 10px 0;">
+    <span class="pill warning">warning · INS-001</span>
+    <h4 style="margin: 6px 0 4px;">삼성전자 RSI 71.2 — 과매수 영역</h4>
+    <p style="font-size: 10pt; margin: 0; color: var(--text-2);">직전 5일 RSI 평균 67.8. 단기 조정 가능성. 익절 분할 또는 신규 매수 보류 권장.</p>
+    <p style="font-size: 9pt; margin-top: 6px; color: var(--text-3);">📅 2026-04-26 09:35 · 차트로 이동 →</p>
+  </div>
+
+  <h2>3.6 스킬 학습 모듈 (게이미피케이션)</h2>
+  <p>14개 스킬 노드, 5개 브랜치 (차트·재무·심리·캡스톤·보스). 각 스킬은 4섹션 (도입·개념·연습·퀴즈) 으로 학습. Claude Haiku 가 콘텐츠 자동 생성.</p>
+
+  <div class="page-footer"><span>3. 대시보드 구성</span><span>08</span></div>
+</section>
+
+<!-- ========== 4. Skills.md 설계 방향 ========== -->
+<section class="page">
+  <div class="page-header"><span>4. Skills.md 설계 방향</span><span>Skills.md Design</span></div>
+  <h1>4. Skills.md 설계 방향</h1>
+
+  <h2>4.1 Skills.md 의 역할</h2>
+  <blockquote>
+    <strong>분석 엔진의 단일 진실 공급원(SSOT).</strong>
+    데이터 → 분석 → 시각화 → 인사이트 의 모든 규칙을 선언적으로 정의.
+    문서를 수정하면 코드 변경 없이 새 분석 기준이 적용된다.
+  </blockquote>
+
+  <h2>4.2 5대 규칙 카테고리</h2>
+  <div class="grid grid-2">
+    <div class="card brand">
+      <h4>§1 입력 인터페이스</h4>
+      <p style="font-size: 10pt; margin: 0;">Candle / Stock / Position / Trade 4가지 표준 타입. 외부 데이터는 어댑터로 정규화.</p>
+    </div>
+    <div class="card brand">
+      <h4>§2 지표 계산 (IND-XXX)</h4>
+      <p style="font-size: 10pt; margin: 0;">SMA, EMA, RSI, MACD, 볼린저, OBV, HV, MDD, Sharpe, Beta, PER, PBR — 12개 표준 지표.</p>
+    </div>
+    <div class="card brand">
+      <h4>§3 시각화 매핑 (VIZ-XXX)</h4>
+      <p style="font-size: 10pt; margin: 0;">데이터 형태 → 차트 종류. 11개 시각화 타입. 색상은 한국 컨벤션 빨강↑/파랑↓.</p>
+    </div>
+    <div class="card brand">
+      <h4>§4 인사이트 (INS-XXX)</h4>
+      <p style="font-size: 10pt; margin: 0;">조건/메시지/강도/액션 4요소. 12개 자동 인사이트 + LLM 자연어 보강.</p>
+    </div>
+    <div class="card brand" style="grid-column: span 2;">
+      <h4>§5 리포트 조립 흐름</h4>
+      <p style="font-size: 10pt; margin: 0;">4단계 stateless 파이프라인 + 8개 화면 슬롯 매핑 + 우선순위 정렬.</p>
+    </div>
+  </div>
+
+  <h2>4.3 규칙 작성 규약 (DSL)</h2>
+  <p>모든 규칙은 다음 패턴을 따른다:</p>
+  <pre>### {ID-XXX} {짧은 이름}
+- 수식 / 조건: {결정적이고 재현 가능한 정의}
+- 윈도우 / 임계: {파라미터 명시}
+- NULL 처리: {경계 케이스 정의}
+- 활용 / 강도: {이 규칙이 어디에 쓰이는지}</pre>
+
+  <h2>4.4 규칙 적용 흐름</h2>
+  <div class="flow">
+    <div class="flow-step active"><strong>입력</strong>Raw 데이터</div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step active"><strong>§1</strong>표준 타입</div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step active"><strong>§2</strong>derived</div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step active"><strong>§4</strong>insights[]</div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step active"><strong>§3·§5</strong>화면</div>
+  </div>
+
+  <div class="page-footer"><span>4. Skills.md 설계 방향</span><span>09</span></div>
+</section>
+
+<section class="page">
+  <div class="page-header"><span>4. Skills.md 설계 방향 (계속)</span><span>Skills.md Design</span></div>
+
+  <h2>4.5 새 규칙 추가 절차</h2>
+  <p>Skills.md 에 규칙을 추가하면 코드 변경 없이 새 분석/시각화/인사이트가 활성화된다.</p>
+  <table>
+    <thead><tr><th>유형</th><th>1단계</th><th>2단계</th><th>결과</th></tr></thead>
+    <tbody>
+      <tr><td>새 지표 (IND)</td><td>Skills.md §2 에 IND-XXX 정의</td><td><code>registry.ts</code> 에 함수 등록</td><td>차트 옵션 자동 노출</td></tr>
+      <tr><td>새 차트 (VIZ)</td><td>§3 매핑 표에 행 추가</td><td>컴포넌트 + VIZ_REGISTRY 등록</td><td>슬롯이 자동 선택</td></tr>
+      <tr><td>새 인사이트 (INS)</td><td>§4 에 INS-XXX 정의</td><td><code>insights.ts</code> evaluator 등록</td><td>다음 사이클부터 발동</td></tr>
+    </tbody>
+  </table>
+
+  <h2>4.6 LLM 가드레일</h2>
+  <p>결정적 규칙(§2~§4) 위에 Claude 로 자연어 해설을 보강하되, 다음 가드레일을 적용:</p>
+  <ul>
+    <li>특정 종목의 매수/매도를 단정적으로 권하지 않음 (법적 리스크)</li>
+    <li>손절을 부정적인 일로 만들지 않고 학습 신호로 다룸</li>
+    <li>한국어 반말 톤, 응답 토큰 상한 600</li>
+    <li>일일 30회 한도 (사용자별, <code>ai_messages</code> 테이블 카운트)</li>
+    <li>월 사용자당 비용 목표: $0.10</li>
+  </ul>
+
+  <h2>4.7 데이터 무결성 원칙</h2>
+  <ul>
+    <li><strong>결정적</strong>: 동일 입력 → 항상 동일 출력</li>
+    <li><strong>NULL 보존</strong>: 데이터 없으면 0 으로 채우지 않고 NULL</li>
+    <li><strong>스테이트리스</strong>: 각 단계는 독립 실행 가능</li>
+    <li><strong>캐시 가능</strong>: 60초 SWR 표준 (지표) / 5분 (스킬 콘텐츠)</li>
+    <li><strong>RLS 강제</strong>: Supabase Row Level Security 로 본인 데이터만 접근</li>
+  </ul>
+
+  <div class="page-footer"><span>4. Skills.md 설계 방향</span><span>10</span></div>
+</section>
+
+<!-- ========== 5. 확장 기능 아이디어 ========== -->
+<section class="page">
+  <div class="page-header"><span>5. 확장 기능 아이디어</span><span>Future Features</span></div>
+  <h1>5. 확장 기능 아이디어</h1>
+
+  <h2>5.1 Phase 1 — 즉시 추가 가능 (1~2주)</h2>
+  <div class="grid grid-2">
+    <div class="card">
+      <h4>📊 멀티 종목 비교</h4>
+      <p style="font-size: 10pt; margin: 0;">선택 종목 N개의 정규화 수익률 (시작점=100) 동시 비교. VIZ-005 활용.</p>
+    </div>
+    <div class="card">
+      <h4>🌡️ 섹터 히트맵</h4>
+      <p style="font-size: 10pt; margin: 0;">코스피 200 모든 종목의 일간 등락률을 섹터별로 그루핑한 한 화면 시장 지도.</p>
+    </div>
+    <div class="card">
+      <h4>💬 자연어 쿼리</h4>
+      <p style="font-size: 10pt; margin: 0;">"최근 1주 수익률 상위 5개", "내 포트 중 PER 가장 높은 거" → Claude 가 SQL 생성 후 실행.</p>
+    </div>
+    <div class="card">
+      <h4>🔔 인사이트 알람</h4>
+      <p style="font-size: 10pt; margin: 0;">사용자가 관심 종목 + 트리거 INS 선택 시 이메일/슬랙 푸시.</p>
+    </div>
+  </div>
+
+  <h2>5.2 Phase 2 — 중기 (1~2개월)</h2>
+  <div class="grid grid-2">
+    <div class="card">
+      <h4>⏪ 백테스팅 엔진</h4>
+      <p style="font-size: 10pt; margin: 0;">Skills.md 에 BT-XXX 규칙 신설. "RSI 30 미만 매수 + 70 초과 매도" 같은 전략을 과거 데이터로 검증.</p>
+    </div>
+    <div class="card">
+      <h4>🤖 자동 매매 일지</h4>
+      <p style="font-size: 10pt; margin: 0;">매매 후 30분 내 진입 근거 + 차트 스냅샷 + AI 회고 자동 저장. 주간 리포트 생성.</p>
+    </div>
+    <div class="card">
+      <h4>🌐 멀티 자산 지원</h4>
+      <p style="font-size: 10pt; margin: 0;">미국 주식, ETF, 채권, 암호화폐. Skills.md 에 자산군별 별도 규칙 추가.</p>
+    </div>
+    <div class="card">
+      <h4>📰 뉴스 임팩트 분석</h4>
+      <p style="font-size: 10pt; margin: 0;">DART 공시 + 네이버 뉴스 → Claude 가 종목 영향도 분석 → 인사이트 카드로.</p>
+    </div>
+  </div>
+
+  <h2>5.3 Phase 3 — 장기 (3~6개월)</h2>
+  <ul>
+    <li><strong>Skills.md 마켓플레이스</strong>: 사용자가 만든 분석 규칙 세트 공유. "가치투자자 v1", "단타용 v2" 등 프리셋.</li>
+    <li><strong>로보 어드바이저</strong>: 사용자 위험 성향 + 보유종목 → 리밸런싱 제안 (정보 제공만, 매매 권유 X)</li>
+    <li><strong>커뮤니티 (선택적)</strong>: 학습 진행률 비교, 챌린지 (강제 비공개 모드 가능)</li>
+    <li><strong>API 공개</strong>: 다른 핀테크 앱이 Skills.md 엔진을 호출해 같은 일관성으로 분석</li>
+  </ul>
+
+  <div class="page-footer"><span>5. 확장 기능 아이디어</span><span>11</span></div>
+</section>
+
+<!-- ========== 6. 기술 스택 ========== -->
+<section class="page">
+  <div class="page-header"><span>6. 기술 스택 + 아키텍처</span><span>Stack</span></div>
+  <h1>6. 기술 스택 + 아키텍처</h1>
+
+  <h2>6.1 스택 한눈에</h2>
+  <table>
+    <thead><tr><th>레이어</th><th>기술</th><th>이유</th></tr></thead>
+    <tbody>
+      <tr><td>프론트</td><td>Next.js 15 (App Router) + React 19 + TS</td><td>RSC 로 서버사이드 데이터 페칭, 빠른 첫 페인트</td></tr>
+      <tr><td>스타일</td><td>Tailwind CSS 3.4 + Pretendard</td><td>한국어 가독성 최적, 디자인 토큰 정합성</td></tr>
+      <tr><td>인증·DB</td><td>Supabase (Postgres 15 + RLS)</td><td>매직링크 + Row Level Security 무료 티어 충분</td></tr>
+      <tr><td>차트</td><td>lightweight-charts (TradingView OSS)</td><td>가벼움(40KB), 캔들 + 볼륨 동시 렌더, MIT</td></tr>
+      <tr><td>데이터</td><td>네이버 siseJson + Yahoo v8 (폴백)</td><td>한국 주식 무료, 라이브러리 의존 X (직접 fetch)</td></tr>
+      <tr><td>AI</td><td>Claude Haiku 4.5 + Sonnet 4.6 (회고)</td><td>비용 효율 + 한국어 품질</td></tr>
+      <tr><td>호스팅</td><td>Vercel Hobby (무료)</td><td>Next.js 자동 배포, 100GB 대역폭</td></tr>
+    </tbody>
+  </table>
+
+  <h2>6.2 아키텍처 다이어그램</h2>
+  <pre>┌──────────────────────────────────────────────────────────┐
+│                       사용자 브라우저                       │
+│   대시보드 (Next.js RSC) ← UI / Tailwind / lightweight    │
+└──────────────────┬───────────────────────────────────────┘
+                   │ HTTPS
+┌──────────────────▼───────────────────────────────────────┐
+│                Vercel Edge / Node Runtime                 │
+│  /api/market/candles  ← 네이버 + Yahoo 직접 fetch         │
+│  /api/coach/trade-entry  ← Claude Haiku 호출              │
+│  /api/trade/order  ← Supabase RPC + 트랜잭션              │
+│  /api/quests/*  ← ensure_daily_missions / add_exp RPC     │
+└──────────────────┬───────────────────────────────────────┘
+                   │ Postgres + RLS
+┌──────────────────▼───────────────────────────────────────┐
+│            Supabase (Auth + DB + Storage)                 │
+│  14 테이블 + RLS + 3개 RPC 함수 (멱등 마이그레이션)       │
+└──────────────────────────────────────────────────────────┘
+                   │ AI 호출
+┌──────────────────▼───────────────────────────────────────┐
+│   Anthropic Claude API (Haiku 4.5 / Sonnet 4.6)          │
+│   프롬프트는 lib/claude/prompts.ts 에 6종 정의            │
+└──────────────────────────────────────────────────────────┘</pre>
+
+  <h2>6.3 보안 / 정책</h2>
+  <ul>
+    <li>Supabase RLS — 본인 행만 read/write</li>
+    <li>API 키 분리 — service_role 은 시드 스크립트 전용 (클라이언트 절대 노출 X)</li>
+    <li>KIS 개인 모드 가드 — <code>lib/kis/guard.ts</code> 에서 본인 토글 체크 후 통과</li>
+    <li>Anthropic 일일 30회 한도 — 비용 폭주 방지</li>
+    <li>이메일 화이트리스트 (선택) — 공개 배포 시 본인만 접근 가능</li>
+  </ul>
+
+  <div class="page-footer"><span>6. 기술 스택 + 아키텍처</span><span>12</span></div>
+</section>
+
+<!-- ========== 7. 차별화 포인트 ========== -->
+<section class="page">
+  <div class="page-header"><span>7. 차별화 포인트</span><span>Differentiation</span></div>
+  <h1>7. 차별화 포인트</h1>
+
+  <div class="grid grid-2">
+    <div class="card brand">
+      <h3>🎯 Skills.md 라는 단일 SSOT</h3>
+      <p style="font-size: 10.5pt;">기존 대시보드는 분석 규칙이 코드 곳곳에 분산. TradeQuest Insights 는 모든 규칙을 단일 .md 에 선언적으로 모아 — 코드 변경 없이 분석 기준 갱신 가능.</p>
+    </div>
+    <div class="card brand">
+      <h3>🇰🇷 한국 시장 최적화</h3>
+      <p style="font-size: 10.5pt;">빨강↑/파랑↓ 컨벤션, 한국어 반말 톤의 인사이트, KOSPI/KOSDAQ 일봉 무료 (네이버), 매직링크 로그인 (한국 사용자에게 친숙).</p>
+    </div>
+    <div class="card brand">
+      <h3>🎮 학습 + 실전 통합</h3>
+      <p style="font-size: 10.5pt;">스킬 트리 14개 + 4섹션 학습 모듈 + 모의매매 실습이 단일 사이클로 연결됨. 학습한 지표가 실제 차트에서 인사이트로 작동.</p>
+    </div>
+    <div class="card brand">
+      <h3>🤖 결정적 규칙 + LLM 보강</h3>
+      <p style="font-size: 10.5pt;">기존 AI 분석 도구의 약점 — 환각·재현성 부족. Skills.md 의 deterministic 규칙으로 뼈대를 잡고 Claude 는 자연어 해설만 담당.</p>
+    </div>
+    <div class="card brand">
+      <h3>⚖️ 정책 안전 설계</h3>
+      <p style="font-size: 10.5pt;">KIS 개인 모드 토글로 약관(본인 계좌 한정) 자동 준수. 매매 권유성 표현 가드레일. 공개 배포에도 안전.</p>
+    </div>
+    <div class="card brand">
+      <h3>🔌 오픈소스 + 확장</h3>
+      <p style="font-size: 10.5pt;">MIT 라이선스. 다른 핀테크 팀이 Skills.md 엔진을 그대로 가져가 자사 데이터에 적용 가능. API 공개 로드맵.</p>
+    </div>
+  </div>
+
+  <h2>경쟁 포지셔닝</h2>
+  <table>
+    <thead><tr><th>제품</th><th>분석 규칙 가시성</th><th>한국 시장</th><th>학습 통합</th><th>가격</th></tr></thead>
+    <tbody>
+      <tr><td>증권사 HTS</td><td>블랙박스</td><td>완벽</td><td>없음</td><td>무료</td></tr>
+      <tr><td>TradingView</td><td>Pine Script (코드)</td><td>유료</td><td>없음</td><td>$15~/월</td></tr>
+      <tr><td>네이버 증권</td><td>고정</td><td>완벽</td><td>없음</td><td>무료</td></tr>
+      <tr><td>국내 핀테크 앱</td><td>블랙박스</td><td>완벽</td><td>일부</td><td>무료~유료</td></tr>
+      <tr style="background: rgba(99,102,241,0.05);"><td><strong>TradeQuest Insights</strong></td><td><strong>Skills.md (선언적)</strong></td><td><strong>완벽</strong></td><td><strong>완벽 통합</strong></td><td><strong>무료</strong></td></tr>
+    </tbody>
+  </table>
+
+  <div class="page-footer"><span>7. 차별화 포인트</span><span>13</span></div>
+</section>
+
+<!-- ========== 8. 일정 ========== -->
+<section class="page">
+  <div class="page-header"><span>8. 일정 및 마일스톤</span><span>Roadmap</span></div>
+  <h1>8. 일정 및 마일스톤</h1>
+
+  <table>
+    <thead><tr><th>주차</th><th>마일스톤</th><th>주요 산출물</th></tr></thead>
+    <tbody>
+      <tr><td>Week 0</td><td>환경 셋업</td><td>Supabase 프로젝트, KIS / Anthropic 키, GitHub 레포</td></tr>
+      <tr><td>Week 1</td><td>스키마 + 인증</td><td>14개 테이블 + RLS, 매직링크, 캐릭터 생성</td></tr>
+      <tr><td>Week 2</td><td>Skills.md v0.1</td><td>IND 12 / VIZ 11 / INS 12 정의 + 등록 함수</td></tr>
+      <tr><td>Week 3</td><td>대시보드 슬롯</td><td>홈/매매/포트폴리오 5개 메인 뷰 RSC 연결</td></tr>
+      <tr><td>Week 4</td><td>차트 엔진</td><td>네이버 + Yahoo 백엔드, lightweight-charts, 한국 컨벤션</td></tr>
+      <tr><td>Week 5</td><td>AI 코치</td><td>Claude Haiku 6종 프롬프트 + 일일 한도</td></tr>
+      <tr><td>Week 6</td><td>인사이트 피드</td><td>INS 12개 자동 발동 + 우선순위 정렬 + 알림 카드</td></tr>
+      <tr><td>Week 7</td><td>스킬 트리</td><td>14 노드 + 학습 모듈 + 자동 콘텐츠 생성</td></tr>
+      <tr><td>Week 8</td><td>배포 + QA</td><td>Vercel + 이메일 화이트리스트 + 사용자 테스트</td></tr>
+    </tbody>
+  </table>
+
+  <h2>완성 시점 KPI</h2>
+  <div class="grid grid-3">
+    <div class="card"><div class="card-label">기능 완성도</div><div class="card-value">100%</div><div class="card-sub">5개 메인 뷰 + Skills.md 36개 규칙</div></div>
+    <div class="card"><div class="card-label">월 비용 (사용자당)</div><div class="card-value">≤ $0.10</div><div class="card-sub">Anthropic + Vercel + Supabase</div></div>
+    <div class="card"><div class="card-label">첫 페인트 (LCP)</div><div class="card-value">≤ 2초</div><div class="card-sub">Vercel Edge + RSC</div></div>
+  </div>
+
+  <h2>리스크 + 대응</h2>
+  <table>
+    <thead><tr><th>리스크</th><th>영향</th><th>대응</th></tr></thead>
+    <tbody>
+      <tr><td>네이버 API 차단</td><td>중</td><td>Yahoo Finance 폴백 + KRX OpenAPI 등록 (장기)</td></tr>
+      <tr><td>Anthropic 비용 폭주</td><td>중</td><td>일일 한도 + 토큰 상한 + 결정적 규칙으로 LLM 의존도 최소화</td></tr>
+      <tr><td>KIS 약관 위반</td><td>고</td><td>개인 모드 토글로 본인 외 차단 (기본 OFF)</td></tr>
+      <tr><td>한국 주식 차트 안정성</td><td>중</td><td>2단계 폴백 + 네이버 증권 외부 링크 백업</td></tr>
+    </tbody>
+  </table>
+
+  <div class="page-footer"><span>8. 일정 및 마일스톤</span><span>14</span></div>
+</section>
+
+<!-- ========== 부록 ========== -->
+<section class="page">
+  <div class="page-header"><span>부록 — Skills.md 발췌</span><span>Appendix</span></div>
+  <h1>부록 — Skills.md 발췌</h1>
+  <p class="lead">실제 프로젝트의 <code>Skills.md</code> 핵심 부분 (전체 230줄 중).</p>
+
+  <h3>§2 지표 계산 — RSI 정의 발췌</h3>
+  <pre>### IND-003 RSI (14일)
+- 수식: RSI = 100 - 100 / (1 + RS), RS = 평균상승폭 / 평균하락폭 (윈도우 14)
+- 해석:
+  - RSI > 70  → 과매수 (insight INS-001 발동)
+  - RSI < 30  → 과매도 (insight INS-002 발동)
+  - 30 ≤ RSI ≤ 70 → 중립</pre>
+
+  <h3>§3 시각화 매핑</h3>
+  <pre>| 데이터 형태       | 분석 의도   | 차트 종류 (VIZ ID)        |
+| OHLCV 시계열      | 가격 추세   | 캔들스틱 (VIZ-001)        |
+| 다중 시계열       | 동조성      | 멀티라인 (VIZ-003)        |
+| 종목간 수익률     | 상대성과    | 정규화 멀티라인 (VIZ-005) |
+| 포트 비중         | 점유율      | 도넛 (VIZ-006)            |
+| 종목간 상관관계   | 분산효과    | 히트맵 (VIZ-008)          |</pre>
+
+  <h3>§4 인사이트 — 골든크로스 정의 발췌</h3>
+  <pre>### INS-003 골든크로스
+- 조건: 직전 5거래일 내 IND-004 MACD 가 Signal 을 상향 돌파
+- 메시지: "{종목명} MACD 골든크로스 발생. 단기 상승 모멘텀 형성 가능."
+- 강도: bullish
+- 추천 액션: "매수 시 진입 근거에 모멘텀 명시"</pre>
+
+  <h3>§5 리포트 조립 흐름</h3>
+  <pre>[Raw Data] → [정규화] → [지표 계산] → [인사이트 추출] → [리포트 조립]
+              §1          §2            §4               §5</pre>
+
+  <h3>§7 새 규칙 추가 절차</h3>
+  <pre>새 지표 (IND) 추가:
+  1. §2 에 IND-XXX 항목 신설 (수식, 윈도우, NULL 처리 명시)
+  2. lib/skills/registry.ts 의 INDICATOR_FNS 에 동일 ID 함수 등록
+  3. 자동으로 차트 옵션에 노출</pre>
+
+  <blockquote style="margin-top: 24px;">
+    <strong>Skills.md 전체 본문은 GitHub 레포 (Festinz/tradequest) 의 <code>Skills.md</code> 파일에서 확인 가능.</strong><br>
+    230여 줄 · 12 IND + 11 VIZ + 12 INS + 4단계 파이프라인 + LLM 가드레일 + 라이선스 명세 포함.
+  </blockquote>
+
+  <div class="page-footer"><span>부록</span><span>15</span></div>
+</section>
+
+<!-- ========== 끝 ========== -->
+<section class="page" style="display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; background: linear-gradient(135deg, var(--brand) 0%, var(--brand-dark) 100%); color: white; min-height: 297mm;">
+  <div style="font-size: 14pt; opacity: 0.85; margin-bottom: 16px;">기획서 끝</div>
+  <h1 style="color: white; font-size: 32pt; margin-bottom: 8px;">Thank you</h1>
+  <p style="font-size: 13pt; opacity: 0.85; max-width: 420px;">
+    Skills.md 한 문서로 어떤 투자 데이터든 일관된 대시보드로.<br>
+    TradeQuest Insights — 2026 금융 데이터 시각화 해커톤.
+  </p>
+  <div style="margin-top: 40px; opacity: 0.7; font-size: 10pt;">
+    GitHub: github.com/Festinz/tradequest<br>
+    Made by Festinz · 2026
+  </div>
+</section>
+
+</body>
+</html>

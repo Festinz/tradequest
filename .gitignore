@@ -38,6 +38,7 @@ next-env.d.ts
 # editor
 .vscode/
 .idea/
+.claude/
 
 # 콘텐츠 캐시
 /content/skills/*.json
